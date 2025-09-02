@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results - Solar Anomaly Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: black;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: #2c3e50 !important;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: none;
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1a2530 100%);
+            transform: translateY(-2px);
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .anomaly-card {
+            border-left: 5px solid #e74c3c;
+        }
+        .normal-card {
+            border-left: 5px solid #2ecc71;
+        }
+        .lime-positive {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        .lime-negative {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        .ai-analysis {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .feature-bar {
+            height: 30px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #27ae60 100%);
+            position: relative;
+        }
+        .feature-bar-value {
+            position: absolute;
+            right: 10px;
+            color: white;
+            font-weight: bold;
+            line-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-solar-panel me-2"></i>Solar Anomaly Detection
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-arrow-left me-1"></i>Back to Upload</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);">
+                    <h2 class="stat-number">{{ results.total_count }}</h2>
+                    <p class="stat-label">Total Samples Analyzed</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                    <h2 class="stat-number">{{ results.anomaly_count }}</h2>
+                    <p class="stat-label">Anomalies Detected</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #16a085 100%);">
+                    <h2 class="stat-number">{{ "%.2f"|format(results.anomaly_count / results.total_count * 100) }}%</h2>
+                    <p class="stat-label">Anomaly Percentage</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-chart-area me-2"></i>Analysis Overview</h4>
+            </div>
+            <div class="card-body">
+                <img src="data:image/png;base64,{{ results.plot_data }}" class="img-fluid" alt="Analysis Charts">
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+            <a href="{{ url_for('download', result_id=result_id) }}" class="btn btn-primary">          <i class="fas fa-download me-2"></i>Download Results
+            </a>
+        </div>
+
+        {% if results.detailed_results %}
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%); border-bottom: 2px solid #FFD700;">
+        <h4 class="mb-0" style="color: #FFD700;"><i class="fas fa-microscope me-2"></i>Detailed Anomaly Analysis</h4>
+    </div>
+    <div class="card-body" style="background-color: var(--q-dark);">
+        <div class="accordion" id="anomalyAccordion">
+            {% for result in results.detailed_results %}
+            <div class="accordion-item" style="background-color: #2a3b4c; border: 1px solid #34495e; margin-bottom: 15px; border-radius: 8px;">
+                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapse{{ loop.index }}" 
+                            aria-expanded="{{ 'true' if loop.first else 'false' }}" 
+                            aria-controls="collapse{{ loop.index }}"
+                            style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: #FFD700; font-weight: 600; border-radius: 8px;">
+                        <span class="badge me-2" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">Anomaly #{{ loop.index }}</span>
+                        Device: {{ result.device_id }} | Time: {{ result.timestamp }}
+                    </button>
+                </h2>
+                <div id="collapse{{ loop.index }}" 
+                     class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                     aria-labelledby="heading{{ loop.index }}" 
+                     data-bs-parent="#anomalyAccordion">
+                    <div class="accordion-body" style="background-color: #2a3b4c; color: #ecf0f1;">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 style="color: #FFD700;"><i class="fas fa-info-circle me-2"></i>Anomaly Details</h5>
+                                <ul class="list-group">
+                                    <li class="list-group-item" style="background-color: #34495e; color: #ecf0f1; border: 1px solid #4a6572;">
+                                        Device ID: <strong style="color: #FFD700;">{{ result.device_id }}</strong>
+                                    </li>
+                                    <li class="list-group-item" style="background-color: #34495e; color: #ecf0f1; border: 1px solid #4a6572;">
+                                        Timestamp: <strong style="color: #FFD700;">{{ result.timestamp }}</strong>
+                                    </li>
+                                    <li class="list-group-item" style="background-color: #34495e; color: #ecf0f1; border: 1px solid #4a6572;">
+                                        Sample Index: <strong style="color: #FFD700;">{{ result.anomaly_index }}</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 style="color: #FFD700;"><i class="fas fa-chart-bar me-2"></i>Anomaly Contribution Breakdown</h5>
+                                <div class="border" style="border-color: #4a6572 !important; border-radius: 8px; padding: 10px; background-color: #1e2a38;">
+                                    <img src="data:image/png;base64,{{ results.lime_plots[loop.index0] }}" class="img-fluid" alt="LIME Explanation">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 style="color: #FFD700;"><i class="fas fa-list-ol me-2"></i>Parameter Impact Assessment</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped" style="background-color: #34495e; color: #ecf0f1; border-radius: 8px; overflow: hidden;">
+                                        <thead style="background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%); color: #FFD700;">
+                                            <tr>
+                                                <th>Feature</th>
+                                                <th>Contribution</th>
+                                                <th>Impact</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for feature, weight in result.lime_features %}
+                                            <tr style="background-color: #3a4c5f; color: #ecf0f1;">
+                                                <td style="font-weight: 500;">{{ feature }}</td>
+                                                <td class="{{ 'lime-positive' if weight > 0 else 'lime-negative' }}" style="font-weight: 600;">
+                                                    {{ "%.4f"|format(weight) }}
+                                                </td>
+                                                <td>
+                                                    {% if weight < -0.1 %}
+                                                    <span class="badge" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">High Negative Impact</span>
+                                                    {% elif weight < 0 %}
+                                                    <span class="badge" style="background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); color: #fff;">Negative Impact</span>
+                                                    {% elif weight > 0.1 %}
+                                                    <span class="badge" style="background: linear-gradient(135deg, #27ae60 0%, #16a085 100%);">High Positive Impact</span>
+                                                    {% elif weight > 0 %}
+                                                    <span class="badge" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">Positive Impact</span>
+                                                    {% else %}
+                                                    <span class="badge" style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);">Neutral</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if result.groq_analysis %}
+                        <div class="row">
+                            <div class="col-12">
+                                <h5 style="color: #FFD700;"><i class="fas fa-robot me-2"></i>Intelligent System Evaluation</h5>
+                                <div class="ai-analysis" style="background: #34495e; border-left: 4px solid #FFD700; color: #ecf0f1;">
+                                    {{ result.groq_analysis|replace('\n', '<br>')|safe }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+    </div>
+
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <p class="mb-0">Solar Anomaly Detection System &copy; 2023</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to stats cards
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'scale(1.05)';
+                    card.style.transition = 'transform 0.3s ease';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
