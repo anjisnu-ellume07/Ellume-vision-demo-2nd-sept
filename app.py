@@ -597,7 +597,7 @@ class SolarAnomalyDetector:
         
         # Create figure with subplots
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle('Solar Anomaly Detection Analysis', fontsize=16, fontweight='bold')
+        fig.suptitle('Ellume Vision Analysis', fontsize=16, fontweight='bold')
         
         # 1. Anomaly score distribution
         axes[0, 0].hist(anomaly_scores, bins=50, alpha=0.7, color='skyblue', edgecolor='black')
