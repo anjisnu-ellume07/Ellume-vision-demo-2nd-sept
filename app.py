@@ -677,7 +677,7 @@ class SolarAnomalyDetector:
         plt.close(fig)
         
         return plot_data
-
+    
     def create_lime_plot(self, lime_features, index):
         """Create a visualization for LIME feature contributions"""
         # Extract feature names and weights
@@ -786,7 +786,7 @@ def index():
                 lime_plots.append(lime_plot)
             
             # Generate a result ID based on filename and timestamp
-            result_id = f"{os.path.splitext(csv_filename)[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            result_id = f"{os.path.splitext(csv_filename)[0]}"
             
             # Prepare results data
             results_data = {
